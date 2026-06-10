@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>統計學期末題庫（隨機出題版）</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Microsoft JhengHei', sans-serif; background: #f0f2f5; color: #333; padding-bottom: 40px; }
+
+.header { background: #2c3e50; color: white; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; position: sticky; top: 0; z-index: 10; }
+.header h1 { font-size: 1.15em; }
+.hdr-btn {
+  background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 6px; padding: 6px 12px; font-size: 0.85em; cursor: pointer; font-family: inherit;
+}
+.hdr-btn:hover { background: rgba(255,255,255,0.28); }
+
+.container { max-width: 760px; margin: 16px auto; padding: 0 12px; }
+
+.card { background: white; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.q-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+.q-num { font-weight: bold; color: #2c3e50; font-size: 1.05em; }
+.q-tag { background: #e8f0fe; color: #2c5fa8; border-radius: 12px; padding: 2px 10px; font-size: 0.78em; }
+.mini-btn { background: #ecf0f1; border: 1px solid #ccc; border-radius: 6px; padding: 4px 10px; font-size: 0.8em; cursor: pointer; font-family: inherit; }
+.mini-btn:hover { background: #dfe6e9; }
+.q-body { line-height: 1.8; font-size: 1em; margin-bottom: 10px; }
+
+.toggle-btn { background: #2c5fa8; color: white; border: none; border-radius: 6px; padding: 7px 14px; font-size: 0.85em; cursor: pointer; font-family: inherit; }
+.toggle-btn:hover { background: #234a85; }
+
+.solution { margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px; display: none; }
+.solution.open { display: block; }
+.sol-block { margin-bottom: 8px; line-height: 1.7; font-size: 0.95em; }
+.sol-label { font-weight: bold; color: #2c5fa8; }
+.formula-box { background: #f7f9fc; border-left: 4px solid #2c5fa8; padding: 8px 10px; font-size: 0.92em; line-height: 1.7; }
+.answer-box { background: #eafaf1; border-left: 4px solid #27ae60; padding: 8px 10px; font-weight: bold; line-height: 1.8; }
+.tip-box { background: #fff8e1; border-left: 4px solid #f39c12; padding: 8px 10px; font-size: 0.9em; line-height: 1.7; }
+.note { font-size: 0.82em; color: #999; margin-top: 6px; }
+
+.ztable-wrap { overflow-x: auto; }
+table.ztable { border-collapse: collapse; width: 100%; font-size: 0.78em; text-align: center; }
+table.ztable th, table.ztable td { border: 1px solid #ddd; padding: 3px 4px; }
+table.ztable th { background: #2c5fa8; color: white; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 統計學期末題庫（隨機出題版）</h1>
+  <button class="hdr-btn" onclick="regenerateAll()">🔄 全部重新出題</button>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="q-head">
+      <span class="q-num">📐 標準常態分布表（Φ(Z) 速查）</span>
+      <button class="mini-btn" onclick="toggleZTable()">顯示 / 隱藏</button>
+    </div>
+    <div id="ztableBox" style="display:none">
+      <p class="note">Φ(Z) = P(標準常態變數 ≤ Z)，常用於各題「速解」對照。</p>
+      <div class="ztable-wrap" id="ztableHolder"></div>
+    </div>
+  </div>
+
+  <div id="quizContainer"></div>
+
+</div>
+
+<script>
+/* ===== 數學工具 ===== */
+function erf(x){
+  const sign = x>=0?1:-1; x=Math.abs(x);
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const t=1/(1+p*x);
+  const y=1-(((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-x*x);
+  return sign*y;
+}
+function normCDF(x, mu=0, sigma=1){ return 0.5*(1+erf((x-mu)/(sigma*Math.SQRT2))); }
+function comb(n,k){ let r=1; for(let i=0;i<k;i++) r=r*(n-i)/(i+1); return r; }
+function binomPMF(n,k,p){ return comb(n,k)*Math.pow(p,k)*Math.pow(1-p,n-k); }
+function binomCDF(n,k,p){ if(k<0) return 0; if(k>n) k=n; let s=0; for(let i=0;i<=k;i++) s+=binomPMF(n,i,p); return s; }
+function fmt(x,d=2){ return Number(x.toFixed(d)); }
+function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function randInt(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
+function pickPair(arr){
+  let i=randInt(0,arr.length-1), j=randInt(0,arr.length-1);
+  while(j===i) j=randInt(0,arr.length-1);
+  let a=arr[i], b=arr[j];
+  return a<b?[a,b]:[b,a];
+}
+const ZLIST=[-2.5,-2,-1.75,-1.5,-1.28,-1,-0.84,-0.5,-0.25,0,0.25,0.5,0.84,1,1.28,1.5,1.75,2,2.5];
+const ZPOS=[0.5,0.84,1,1.28,1.5,1.75,1.96,2,2.33,2.5];
+
+/* ===== 常態分布單一條件求解 ===== */
+function solveNormalPart(mu, sigma, part){
+  if(part.type==='lt'){
+    const z=(part.x-mu)/sigma, p=normCDF(part.x,mu,sigma);
+    return `Z = (${part.x} − ${mu}) / ${sigma} = ${fmt(z)}　→　P(X &lt; ${part.x}) = Φ(${fmt(z)}) ≈ <b>${fmt(p,4)}</b>`;
+  }
+  if(part.type==='gt'){
+    const z=(part.x-mu)/sigma, pl=normCDF(part.x,mu,sigma), p=1-pl;
+    return `Z = (${part.x} − ${mu}) / ${sigma} = ${fmt(z)}　→　P(X &gt; ${part.x}) = 1 − Φ(${fmt(z)}) = 1 − ${fmt(pl,4)} ≈ <b>${fmt(p,4)}</b>`;
+  }
+  // between
+  const z1=(part.x1-mu)/sigma, z2=(part.x2-mu)/sigma;
+  const p1=normCDF(part.x1,mu,sigma), p2=normCDF(part.x2,mu,sigma), p=p2-p1;
+  return `Z₁=(${part.x1}−${mu})/${sigma}=${fmt(z1)}，Z₂=(${part.x2}−${mu})/${sigma}=${fmt(z2)}　→　P(${part.x1}<X<${part.x2}) = Φ(${fmt(z2)}) − Φ(${fmt(z1)}) = ${fmt(p2,4)} − ${fmt(p1,4)} ≈ <b>${fmt(p,4)}</b>`;
+}
+
+const NORMAL_FORMULA = `常態分布標準化公式：<br><b>Z = (X − μ) / σ</b>，再以 Φ(Z) 查標準常態分布表得到面積（機率）。<br>
+規則：P(X &lt; a) = Φ(Z<sub>a</sub>)　|　P(X &gt; a) = 1 − Φ(Z<sub>a</sub>)　|　P(a &lt; X &lt; b) = Φ(Z<sub>b</sub>) − Φ(Z<sub>a</sub>)`;
+
+const NORMAL_TIP = `1. 先畫常態曲線草圖，確認要的範圍在曲線的哪一段，避免方向算反。<br>
+2. 對稱性：Φ(−Z) = 1 − Φ(Z)，所以「小於負值」直接用「大於正值」的結果。<br>
+3. Z 值四捨五入到小數點後兩位即可查表，誤差不影響作答方向。`;
+
+/* ===== 題目定義 ===== */
+const questions = [
+
+/* Q1：人造衛星誤差（原始檔案此題參數缺漏，補上同類型範例） */
+{
+  tag: '標準常態分布（補充範例）',
+  gen(){
+    const sigma = rnd([1,1.5,2,2.5,3]);
+    const z1 = rnd(ZLIST);
+    const zd2 = rnd([0.5,0.84,1,1.28,1.5,1.96,2]);
+    const z3 = rnd(ZPOS);
+    return {
+      sigma,
+      d1: fmt(z1*sigma,2),
+      d2: fmt(zd2*sigma,2),
+      d3: fmt(z3*sigma,2),
+    };
+  },
+  text(p){
+    return `若某人造衛星偵測的誤差為常態分配 N(0, ${p.sigma}²)（單位：海哩 NM），請計算下列不同誤差距離下的機率值：<br>
+    (1) 誤差小於 ${p.d1} NM 的機率　(2) 誤差絕對值小於 ${p.d2} NM 的機率　(3) 誤差大於 ${p.d3} NM 的機率。`;
+  },
+  formula(){ return NORMAL_FORMULA; },
+  steps(p){
+    return [
+      `(1) ${solveNormalPart(0,p.sigma,{type:'lt',x:p.d1})}`,
+      `(2) |誤差| &lt; ${p.d2} 等於 P(−${p.d2} &lt; X &lt; ${p.d2})：${solveNormalPart(0,p.sigma,{type:'between',x1:-p.d2,x2:p.d2})}`,
+      `(3) ${solveNormalPart(0,p.sigma,{type:'gt',x:p.d3})}`,
+    ];
+  },
+  tip(){ return NORMAL_TIP + `<br>4. μ=0 時，誤差通常對稱，「絕對值小於 d」= 2×Φ(d/σ) − 1，可省去查兩次表。`; },
+  note: '原始 Word 檔此題參數遺失，已補上同類型（誤差呈常態分配，求不同誤差距離之機率）範例。'
+},
+
+/* Q2：成年男子坐高 */
+{
+  tag: '標準常態分布',
+  gen(){
+    const mu = rnd([33,34,35,36]);
+    const sigma = rnd([1,1.2,1.5,1.8,2]);
+    const z1 = rnd(ZLIST);
+    const [za,zb] = pickPair(ZLIST);
+    const z4 = rnd(ZLIST);
+    return {
+      mu, sigma,
+      x1: fmt(mu+z1*sigma,1),
+      x2: fmt(mu+za*sigma,1),
+      x3: fmt(mu+zb*sigma,1),
+      x4: fmt(mu+z4*sigma,1),
+    };
+  },
+  text(p){
+    return `若成年男子坐下時的高度為常態分配，已知 μ=${p.mu} 吋，σ=${p.sigma} 吋，請計算以下之各機率：<br>
+    (1) 小於 ${p.x1} 吋　(2) 介於 ${p.x2} 吋與 ${p.x3} 吋之間　(3) 大於 ${p.x4} 吋。`;
+  },
+  formula(){ return NORMAL_FORMULA; },
+  steps(p){
+    return [
+      `(1) ${solveNormalPart(p.mu,p.sigma,{type:'lt',x:p.x1})}`,
+      `(2) ${solveNormalPart(p.mu,p.sigma,{type:'between',x1:p.x2,x2:p.x3})}`,
+      `(3) ${solveNormalPart(p.mu,p.sigma,{type:'gt',x:p.x4})}`,
+    ];
+  },
+  tip(){ return NORMAL_TIP; }
+},
+
+/* Q3：化學製程產量 */
+{
+  tag: '標準常態分布',
+  gen(){
+    const mu = rnd([800,900,1000,1100,1200]);
+    const sigma = rnd([20,25,30,40,50]);
+    const z1 = rnd(ZLIST);
+    const [za,zb] = pickPair(ZLIST);
+    const z4 = rnd(ZLIST);
+    const [zc,zd] = pickPair(ZLIST);
+    return {
+      mu, sigma,
+      x1: fmt(mu+z1*sigma,0),
+      x2: fmt(mu+za*sigma,0),
+      x3: fmt(mu+zb*sigma,0),
+      x4: fmt(mu+z4*sigma,0),
+      x5: fmt(mu+zc*sigma,0),
+      x6: fmt(mu+zd*sigma,0),
+    };
+  },
+  text(p){
+    return `假設某化學製程之產量為常態分配，已知平均產量 μ=${p.mu} 克，σ=${p.sigma} 克，求在以下不同產量範圍的機率：<br>
+    (1) 小於 ${p.x1} 克　(2) 介於 ${p.x2} 克與 ${p.x3} 克之間　(3) 大於 ${p.x4} 克　(4) 介於 ${p.x5} 克與 ${p.x6} 克之間。`;
+  },
+  formula(){ return NORMAL_FORMULA; },
+  steps(p){
+    return [
+      `(1) ${solveNormalPart(p.mu,p.sigma,{type:'lt',x:p.x1})}`,
+      `(2) ${solveNormalPart(p.mu,p.sigma,{type:'between',x1:p.x2,x2:p.x3})}`,
+      `(3) ${solveNormalPart(p.mu,p.sigma,{type:'gt',x:p.x4})}`,
+      `(4) ${solveNormalPart(p.mu,p.sigma,{type:'between',x1:p.x5,x2:p.x6})}`,
+    ];
+  },
+  tip(){ return NORMAL_TIP; }
+},
+
+/* Q4：成年男性前手臂長度 */
+{
+  tag: '標準常態分布',
+  gen(){
+    const mu = rnd([17,17.5,18,18.5,19,19.5,20]);
+    const sigma = rnd([0.8,1,1.2,1.5]);
+    const z1 = rnd(ZLIST);
+    const [za,zb] = pickPair(ZLIST);
+    const z4 = rnd(ZLIST);
+    return {
+      mu, sigma,
+      x1: fmt(mu+z1*sigma,1),
+      x2: fmt(mu+za*sigma,1),
+      x3: fmt(mu+zb*sigma,1),
+      x4: fmt(mu+z4*sigma,1),
+    };
+  },
+  text(p){
+    return `若成年男性前手臂長度呈 μ=${p.mu} 吋、σ=${p.sigma} 吋之常態分配，求前臂長度在下列各情形之機率：<br>
+    (1) 短於 ${p.x1} 吋　(2) 介於 ${p.x2} 吋與 ${p.x3} 吋之間　(3) 長於 ${p.x4} 吋。`;
+  },
+  formula(){ return NORMAL_FORMULA; },
+  steps(p){
+    return [
+      `(1) ${solveNormalPart(p.mu,p.sigma,{type:'lt',x:p.x1})}`,
+      `(2) ${solveNormalPart(p.mu,p.sigma,{type:'between',x1:p.x2,x2:p.x3})}`,
+      `(3) ${solveNormalPart(p.mu,p.sigma,{type:'gt',x:p.x4})}`,
+    ];
+  },
+  tip(){ return NORMAL_TIP; }
+},
+
+/* Q5：載重下鋼棒平均伸長量 */
+{
+  tag: '標準常態分布',
+  gen(){
+    const mu = rnd([0.4,0.45,0.5,0.55,0.6,0.7]);
+    const sigma = rnd([0.02,0.03,0.04,0.05]);
+    const [z1,z2] = pickPair(ZLIST);
+    const [zc,zd] = pickPair(ZLIST);
+    return {
+      mu, sigma,
+      x1: fmt(mu+z1*sigma,2),
+      x2: fmt(mu+z2*sigma,2),
+      x3: fmt(mu+zc*sigma,2),
+      x4: fmt(mu+zd*sigma,2),
+    };
+  },
+  text(p){
+    return `假設在載重下，某鋼棒的平均伸長量呈 μ=${p.mu} 吋、σ=${p.sigma} 吋之常態分配，求平均伸長量在下列各情形之機率：<br>
+    (a) 大於 ${p.x1} 吋　(b) 小於 ${p.x2} 吋　(c) 介於 ${p.x3} 吋與 ${p.x4} 吋之間。`;
+  },
+  formula(){ return NORMAL_FORMULA; },
+  steps(p){
+    return [
+      `(a) ${solveNormalPart(p.mu,p.sigma,{type:'gt',x:p.x1})}`,
+      `(b) ${solveNormalPart(p.mu,p.sigma,{type:'lt',x:p.x2})}`,
+      `(c) ${solveNormalPart(p.mu,p.sigma,{type:'between',x1:p.x3,x2:p.x4})}`,
+    ];
+  },
+  tip(){ return NORMAL_TIP; }
+},
+
+/* Q6：城市男子身高 + 抽樣分配 */
+{
+  tag: '標準常態分布 + 抽樣分配',
+  gen(){
+    const mu = rnd([66,67,68,69,70]);
+    const sigma = rnd([2,2.5,3,3.5]);
+    const ka = rnd([1,2,3]);
+    const kb = rnd([1,1.5,2]);
+    return {
+      mu, sigma,
+      da: fmt(ka*sigma,1),
+      db: fmt(kb,1),
+    };
+  },
+  text(p){
+    return `若某城市成年男子的身高為常態分配（μ=${p.mu} 吋，σ=${p.sigma} 吋），<br>
+    (a) 求個別男子身高介於 μ±${p.da} 吋（即 ${fmt(p.mu-p.da,1)}～${fmt(p.mu+p.da,1)} 吋）之機率；<br>
+    (b) 求在以下不同樣本大小下，樣本平均身高介於 μ±${p.db} 吋之機率：① n=25　② n=36。`;
+  },
+  formula(){
+    return NORMAL_FORMULA + `<br><br>抽樣分配（樣本平均數）：<br>
+    若母體為常態分配 N(μ, σ²)，則樣本平均數 X̄ ~ N(μ, σ²/n)，標準誤 <b>σ<sub>X̄</sub> = σ / √n</b>。`;
+  },
+  steps(p){
+    const lo = fmt(p.mu-p.da,1), hi = fmt(p.mu+p.da,1);
+    const se25 = fmt(p.sigma/Math.sqrt(25),4);
+    const se36 = fmt(p.sigma/Math.sqrt(36),4);
+    return [
+      `(a) 個別值，σ=${p.sigma}：${solveNormalPart(p.mu,p.sigma,{type:'between',x1:lo,x2:hi})}`,
+      `(b)① n=25：σ<sub>X̄</sub> = ${p.sigma} / √25 = ${se25}　→　${solveNormalPart(p.mu,se25,{type:'between',x1:fmt(p.mu-p.db,1),x2:fmt(p.mu+p.db,1)})}`,
+      `(b)② n=36：σ<sub>X̄</sub> = ${p.sigma} / √36 = ${se36}　→　${solveNormalPart(p.mu,se36,{type:'between',x1:fmt(p.mu-p.db,1),x2:fmt(p.mu+p.db,1)})}`,
+    ];
+  },
+  tip(){
+    return NORMAL_TIP + `<br>4. n 越大，標準誤 σ/√n 越小，分布越集中在 μ 附近，因此「介於 μ±同一範圍」的機率會隨 n 增大而<b>變大</b>——可用此規律快速檢查答案方向是否合理。`;
+  }
+},
+
+/* Q7：硬幣二項分布 */
+{
+  tag: '間斷型隨機分配（二項分布）',
+  gen(){
+    const p = rnd([0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7]);
+    const n = rnd([8,9,10,12,15]);
+    const a = randInt(1,n-1);
+    const b = randInt(0,n);
+    const c = randInt(1,n);
+    const d = randInt(0,n-1);
+    const [e,f] = pickPair(Array.from({length:n+1},(_, i)=>i));
+    return { p, n, a, b, c, d, e, f };
+  },
+  text(p){
+    return `某枚正反面不均勻的硬幣，出現正面的機率為 ${fmt(p.p*100,0)}%。若投擲 ${p.n} 次，請計算以下出現正面各情況之機率：<br>
+    (a) 至少 ${p.a} 次　(b) 恰為 ${p.b} 次　(c) 少於 ${p.c} 次　(d) 最多 ${p.d} 次　(e) 介於 ${p.e} 次與 ${p.f} 次間。`;
+  },
+  formula(){
+    return `二項分布公式：<br><b>P(X = x) = C(n, x) · p<sup>x</sup> · (1−p)<sup>n−x</sup></b>，X 為 n 次中出現正面的次數。<br>
+    累積：P(X ≤ k) = ΣP(X = i)，i 從 0 到 k。`;
+  },
+  steps(p){
+    const pa = 1 - binomCDF(p.n, p.a-1, p.p);
+    const pb = binomPMF(p.n, p.b, p.p);
+    const pc = binomCDF(p.n, p.c-1, p.p);
+    const pd = binomCDF(p.n, p.d, p.p);
+    const pe = binomCDF(p.n, p.f, p.p) - binomCDF(p.n, p.e-1, p.p);
+    return [
+      `(a) 至少${p.a}次 = 1 − P(X≤${p.a-1}) = 1 − ${fmt(binomCDF(p.n,p.a-1,p.p),4)} ≈ <b>${fmt(pa,4)}</b>`,
+      `(b) 恰為${p.b}次 = C(${p.n},${p.b})×${p.p}^${p.b}×${fmt(1-p.p,2)}^${p.n-p.b} ≈ <b>${fmt(pb,4)}</b>`,
+      `(c) 少於${p.c}次 = P(X≤${p.c-1}) ≈ <b>${fmt(pc,4)}</b>`,
+      `(d) 最多${p.d}次 = P(X≤${p.d}) ≈ <b>${fmt(pd,4)}</b>`,
+      `(e) 介於${p.e}~${p.f}次間 = P(X≤${p.f}) − P(X≤${p.e-1}) = ${fmt(binomCDF(p.n,p.f,p.p),4)} − ${fmt(binomCDF(p.n,p.e-1,p.p),4)} ≈ <b>${fmt(pe,4)}</b>`,
+    ];
+  },
+  tip(){
+    return `1. 「至少」「最多」用<b>互補</b>或<b>累積</b>，避免一項一項硬加：<br>
+    　 P(X≥a) = 1 − P(X≤a−1)，P(X≤d) 直接從 0 加到 d。<br>
+    2. 「恰為」只需算單一項 C(n,x)pˣ(1−p)ⁿ⁻ˣ。<br>
+    3. 「介於 e 與 f 間」= P(X≤f) − P(X≤e−1)，注意端點是否含等號。<br>
+    4. 若 n 很大、p 接近 0.5，可用常態分布近似（μ=np, σ=√(np(1−p))）快速估算。`;
+  }
+}
+
+];
+
+/* ===== 渲染 ===== */
+let state = [];
+
+function init(){
+  state = questions.map(q=>q.gen());
+  renderAll();
+  buildZTable();
+}
+
+function regenerateAll(){
+  state = questions.map(q=>q.gen());
+  renderAll();
+}
+
+function regenerate(i){
+  state[i] = questions[i].gen();
+  renderAll();
+}
+
+function renderAll(){
+  const c = document.getElementById('quizContainer');
+  c.innerHTML = '';
+  questions.forEach((q,i)=>{
+    const p = state[i];
+    const card = document.createElement('div');
+    card.className = 'card';
+    const stepsHtml = q.steps(p).map(s=>`<div class="sol-block">${s}</div>`).join('');
+    const noteHtml = q.note ? `<div class="note">※ ${q.note}</div>` : '';
+    card.innerHTML = `
+      <div class="q-head">
+        <span class="q-num">第 ${i+1} 題</span>
+        <span class="q-tag">${q.tag}</span>
+        <button class="mini-btn" onclick="regenerate(${i})">🎲 換題</button>
+      </div>
+      <div class="q-body">${q.text(p)}</div>
+      ${noteHtml}
+      <button class="toggle-btn" onclick="toggleSol(${i})">顯示公式 / 詳解 / 答案 / 速解</button>
+      <div class="solution" id="sol${i}">
+        <div class="sol-block"><span class="sol-label">公式：</span><div class="formula-box">${q.formula()}</div></div>
+        <div class="sol-block"><span class="sol-label">詳解：</span></div>
+        ${stepsHtml}
+        <div class="sol-block"><span class="sol-label">速解技巧：</span><div class="tip-box">${q.tip()}</div></div>
+      </div>
+    `;
+    c.appendChild(card);
+  });
+}
+
+function toggleSol(i){
+  document.getElementById('sol'+i).classList.toggle('open');
+}
+
+function toggleZTable(){
+  const box = document.getElementById('ztableBox');
+  box.style.display = box.style.display==='none' ? 'block' : 'none';
+}
+
+function buildZTable(){
+  const zs = [];
+  for(let z=0; z<=3.0001; z+=0.1) zs.push(fmt(z,1));
+  let html = '<table class="ztable"><tr><th>Z</th>' + zs.map(z=>`<th>${z}</th>`).join('') + '</tr>';
+  html += '<tr><td>Φ(Z)</td>' + zs.map(z=>`<td>${fmt(normCDF(z),4)}</td>`).join('') + '</tr>';
+  html += '<tr><td>Φ(−Z)</td>' + zs.map(z=>`<td>${fmt(normCDF(-z),4)}</td>`).join('') + '</tr>';
+  html += '</table>';
+  document.getElementById('ztableHolder').innerHTML = html;
+}
+
+init();
+</script>
+</body>
+</html>
