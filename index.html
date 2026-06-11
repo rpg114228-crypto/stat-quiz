@@ -94,19 +94,19 @@ const ZLIST=[-2.5,-2,-1.75,-1.5,-1.28,-1,-0.84,-0.5,-0.25,0,0.25,0.5,0.84,1,1.28
 const ZPOS=[0.5,0.84,1,1.28,1.5,1.75,1.96,2,2.33,2.5];
 
 /* ===== 常態分布單一條件求解 ===== */
-function solveNormalPart(mu, sigma, part){
+function solveNormalPart(mu, sigma, part, varName='X'){
   if(part.type==='lt'){
     const z=(part.x-mu)/sigma, p=normCDF(part.x,mu,sigma);
-    return `Z = (${part.x} − ${mu}) / ${sigma} = ${fmt(z)}　→　P(X &lt; ${part.x}) = Φ(${fmt(z)}) ≈ <b>${fmt(p,4)}</b>`;
+    return `Z = (${part.x} − ${mu}) / ${sigma} = ${fmt(z)}　→　P(${varName} &lt; ${part.x}) = Φ(${fmt(z)}) ≈ <b>${fmt(p,4)}</b>`;
   }
   if(part.type==='gt'){
     const z=(part.x-mu)/sigma, pl=normCDF(part.x,mu,sigma), p=1-pl;
-    return `Z = (${part.x} − ${mu}) / ${sigma} = ${fmt(z)}　→　P(X &gt; ${part.x}) = 1 − Φ(${fmt(z)}) = 1 − ${fmt(pl,4)} ≈ <b>${fmt(p,4)}</b>`;
+    return `Z = (${part.x} − ${mu}) / ${sigma} = ${fmt(z)}　→　P(${varName} &gt; ${part.x}) = 1 − Φ(${fmt(z)}) = 1 − ${fmt(pl,4)} ≈ <b>${fmt(p,4)}</b>`;
   }
   // between
   const z1=(part.x1-mu)/sigma, z2=(part.x2-mu)/sigma;
   const p1=normCDF(part.x1,mu,sigma), p2=normCDF(part.x2,mu,sigma), p=p2-p1;
-  return `Z₁=(${part.x1}−${mu})/${sigma}=${fmt(z1)}，Z₂=(${part.x2}−${mu})/${sigma}=${fmt(z2)}　→　P(${part.x1} &lt; X &lt; ${part.x2}) = Φ(${fmt(z2)}) − Φ(${fmt(z1)}) = ${fmt(p2,4)} − ${fmt(p1,4)} ≈ <b>${fmt(p,4)}</b>`;
+  return `Z₁=(${part.x1}−${mu})/${sigma}=${fmt(z1)}，Z₂=(${part.x2}−${mu})/${sigma}=${fmt(z2)}　→　P(${part.x1} &lt; ${varName} &lt; ${part.x2}) = Φ(${fmt(z2)}) − Φ(${fmt(z1)}) = ${fmt(p2,4)} − ${fmt(p1,4)} ≈ <b>${fmt(p,4)}</b>`;
 }
 
 const NORMAL_FORMULA = `常態分布標準化公式：<br><b>Z = (X − μ) / σ</b>，再以 Φ(Z) 查標準常態分布表得到面積（機率）。<br>
@@ -310,8 +310,8 @@ const questions = [
     const se36 = fmt(p.sigma/Math.sqrt(36),4);
     return [
       `(a) 個別值，σ=${p.sigma}：${solveNormalPart(p.mu,p.sigma,{type:'between',x1:lo,x2:hi})}`,
-      `(b)① n=25：σ<sub>X̄</sub> = ${p.sigma} / √25 = ${se25}　→　${solveNormalPart(p.mu,se25,{type:'between',x1:fmt(p.mu-p.db,1),x2:fmt(p.mu+p.db,1)})}`,
-      `(b)② n=36：σ<sub>X̄</sub> = ${p.sigma} / √36 = ${se36}　→　${solveNormalPart(p.mu,se36,{type:'between',x1:fmt(p.mu-p.db,1),x2:fmt(p.mu+p.db,1)})}`,
+      `(b)① n=25：σ<sub>X̄</sub> = ${p.sigma} / √25 = ${se25}　→　${solveNormalPart(p.mu,se25,{type:'between',x1:fmt(p.mu-p.db,1),x2:fmt(p.mu+p.db,1)},'X̄')}`,
+      `(b)② n=36：σ<sub>X̄</sub> = ${p.sigma} / √36 = ${se36}　→　${solveNormalPart(p.mu,se36,{type:'between',x1:fmt(p.mu-p.db,1),x2:fmt(p.mu+p.db,1)},'X̄')}`,
     ];
   },
   tip(){
