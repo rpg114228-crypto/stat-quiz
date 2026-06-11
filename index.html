@@ -59,7 +59,7 @@ table.ztable th { background: #2c5fa8; color: white; }
       <button class="mini-btn" onclick="toggleZTable()">顯示 / 隱藏</button>
     </div>
     <div id="ztableBox" style="display:none">
-      <p class="note">Φ(Z) = P(標準常態變數 ≤ Z)，常用於各題「速解」對照。</p>
+      <p class="note">Φ(Z) = P(標準常態變數 ≤ Z)。查表方式：左側為 Z 的整數及小數點後第一位，最上方為小數點後第二位，交叉處即為 Φ(Z)。若 Z 為負值，利用對稱性 Φ(−Z) = 1 − Φ(Z) 換算。</p>
       <div class="ztable-wrap" id="ztableHolder"></div>
     </div>
   </div>
@@ -82,6 +82,7 @@ function comb(n,k){ let r=1; for(let i=0;i<k;i++) r=r*(n-i)/(i+1); return r; }
 function binomPMF(n,k,p){ return comb(n,k)*Math.pow(p,k)*Math.pow(1-p,n-k); }
 function binomCDF(n,k,p){ if(k<0) return 0; if(k>n) k=n; let s=0; for(let i=0;i<=k;i++) s+=binomPMF(n,i,p); return s; }
 function fmt(x,d=2){ return Number(x.toFixed(d)); }
+function truncZ(z){ return Math.trunc(z*100)/100; }
 function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function randInt(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
 function pickPair(arr){
@@ -96,16 +97,16 @@ const ZPOS=[0.5,0.84,1,1.28,1.5,1.75,1.96,2,2.33,2.5];
 /* ===== 常態分布單一條件求解 ===== */
 function solveNormalPart(mu, sigma, part, varName='X'){
   if(part.type==='lt'){
-    const z=(part.x-mu)/sigma, p=normCDF(part.x,mu,sigma);
+    const z=truncZ((part.x-mu)/sigma), p=normCDF(z);
     return `Z = (${part.x} − ${mu}) / ${sigma} = ${fmt(z)}　→　P(${varName} &lt; ${part.x}) = Φ(${fmt(z)}) ≈ <b>${fmt(p,4)}</b>`;
   }
   if(part.type==='gt'){
-    const z=(part.x-mu)/sigma, pl=normCDF(part.x,mu,sigma), p=1-pl;
+    const z=truncZ((part.x-mu)/sigma), pl=normCDF(z), p=1-pl;
     return `Z = (${part.x} − ${mu}) / ${sigma} = ${fmt(z)}　→　P(${varName} &gt; ${part.x}) = 1 − Φ(${fmt(z)}) = 1 − ${fmt(pl,4)} ≈ <b>${fmt(p,4)}</b>`;
   }
   // between
-  const z1=(part.x1-mu)/sigma, z2=(part.x2-mu)/sigma;
-  const p1=normCDF(part.x1,mu,sigma), p2=normCDF(part.x2,mu,sigma), p=p2-p1;
+  const z1=truncZ((part.x1-mu)/sigma), z2=truncZ((part.x2-mu)/sigma);
+  const p1=normCDF(z1), p2=normCDF(z2), p=p2-p1;
   return `Z₁=(${part.x1}−${mu})/${sigma}=${fmt(z1)}，Z₂=(${part.x2}−${mu})/${sigma}=${fmt(z2)}　→　P(${part.x1} &lt; ${varName} &lt; ${part.x2}) = Φ(${fmt(z2)}) − Φ(${fmt(z1)}) = ${fmt(p2,4)} − ${fmt(p1,4)} ≈ <b>${fmt(p,4)}</b>`;
 }
 
@@ -425,11 +426,18 @@ function toggleZTable(){
 }
 
 function buildZTable(){
-  const zs = [];
-  for(let z=0; z<=3.0001; z+=0.1) zs.push(fmt(z,1));
-  let html = '<table class="ztable"><tr><th>Z</th>' + zs.map(z=>`<th>${z}</th>`).join('') + '</tr>';
-  html += '<tr><td>Φ(Z)</td>' + zs.map(z=>`<td>${fmt(normCDF(z),4)}</td>`).join('') + '</tr>';
-  html += '<tr><td>Φ(−Z)</td>' + zs.map(z=>`<td>${fmt(normCDF(-z),4)}</td>`).join('') + '</tr>';
+  let html = '<table class="ztable"><tr><th>Z</th>';
+  for(let c=0; c<10; c++) html += `<th>${(c/100).toFixed(2)}</th>`;
+  html += '</tr>';
+  for(let r=0; r<=39; r++){
+    const zBase = r/10;
+    html += `<tr><td><b>${zBase.toFixed(1)}</b></td>`;
+    for(let c=0; c<10; c++){
+      const z = zBase + c/100;
+      html += `<td>${normCDF(z).toFixed(4)}</td>`;
+    }
+    html += '</tr>';
+  }
   html += '</table>';
   document.getElementById('ztableHolder').innerHTML = html;
 }
