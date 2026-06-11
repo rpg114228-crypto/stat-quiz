@@ -136,7 +136,7 @@ const questions = [
     };
   },
   text(p){
-    return `若某人造衛星偵測的誤差為常態分配 N(0, ${p.sigma}²)（單位：海哩 NM），請計算下列不同誤差距離下的機率值：<br>
+    return `若某人造衛星偵測的誤差為常態分配，已知 μ=0，σ=${p.sigma}（單位：海哩 NM），請計算下列不同誤差距離下的機率值：<br>
     (1) 誤差小於 ${p.d1} NM 的機率　(2) 誤差絕對值小於 ${p.d2} NM 的機率　(3) 誤差大於 ${p.d3} NM 的機率。`;
   },
   formula(){ return NORMAL_FORMULA; },
