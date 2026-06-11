@@ -106,7 +106,7 @@ function solveNormalPart(mu, sigma, part){
   // between
   const z1=(part.x1-mu)/sigma, z2=(part.x2-mu)/sigma;
   const p1=normCDF(part.x1,mu,sigma), p2=normCDF(part.x2,mu,sigma), p=p2-p1;
-  return `Z₁=(${part.x1}−${mu})/${sigma}=${fmt(z1)}，Z₂=(${part.x2}−${mu})/${sigma}=${fmt(z2)}　→　P(${part.x1}<X<${part.x2}) = Φ(${fmt(z2)}) − Φ(${fmt(z1)}) = ${fmt(p2,4)} − ${fmt(p1,4)} ≈ <b>${fmt(p,4)}</b>`;
+  return `Z₁=(${part.x1}−${mu})/${sigma}=${fmt(z1)}，Z₂=(${part.x2}−${mu})/${sigma}=${fmt(z2)}　→　P(${part.x1} &lt; X &lt; ${part.x2}) = Φ(${fmt(z2)}) − Φ(${fmt(z1)}) = ${fmt(p2,4)} − ${fmt(p1,4)} ≈ <b>${fmt(p,4)}</b>`;
 }
 
 const NORMAL_FORMULA = `常態分布標準化公式：<br><b>Z = (X − μ) / σ</b>，再以 Φ(Z) 查標準常態分布表得到面積（機率）。<br>
