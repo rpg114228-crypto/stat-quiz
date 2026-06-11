@@ -64,6 +64,23 @@ table.ztable th { background: #2c5fa8; color: white; }
     </div>
   </div>
 
+  <div class="card">
+    <div class="q-head">
+      <span class="q-num">📋 必背公式整理</span>
+      <button class="mini-btn" onclick="toggleFormulaBox()">顯示 / 隱藏</button>
+    </div>
+    <div id="formulaBox" style="display:none">
+      <div class="formula-box">
+        1. <b>Z 標準化</b>：Z = (X − μ) / σ，再以 Φ(Z) 查表得機率。<br>
+        2. <b>N(μ, σ²) 記號</b>：括號內第二項為「變異數」。若標準差 σ=2，記號寫作 N(μ, 2²)，計算時直接用 σ=2，<u>不必再平方一次</u>。<br>
+        3. <b>機率規則</b>：P(X &lt; a) = Φ(Z<sub>a</sub>)　|　P(X &gt; a) = 1 − Φ(Z<sub>a</sub>)　|　P(a &lt; X &lt; b) = Φ(Z<sub>b</sub>) − Φ(Z<sub>a</sub>)<br>
+        4. <b>對稱性</b>：Φ(−Z) = 1 − Φ(Z)<br>
+        5. <b>抽樣分配（樣本平均數）</b>：若 X ~ N(μ, σ²)，則 X̄ ~ N(μ, σ²/n)，標準誤 σ<sub>X̄</sub> = σ / √n<br>
+        6. <b>二項分布</b>：P(X = x) = C(n, x) · p<sup>x</sup> · (1−p)<sup>n−x</sup>，其中 C(n, x) = n! / (x!(n−x)!)
+      </div>
+    </div>
+  </div>
+
   <div id="quizContainer"></div>
 
 </div>
@@ -422,6 +439,11 @@ function toggleSol(i){
 
 function toggleZTable(){
   const box = document.getElementById('ztableBox');
+  box.style.display = box.style.display==='none' ? 'block' : 'none';
+}
+
+function toggleFormulaBox(){
+  const box = document.getElementById('formulaBox');
   box.style.display = box.style.display==='none' ? 'block' : 'none';
 }
 
