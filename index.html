@@ -351,7 +351,9 @@ const questions = [
       `(b) 恰為${p.b}次 = C(${p.n},${p.b})×${p.p}^${p.b}×${fmt(1-p.p,2)}^${p.n-p.b} ≈ <b>${fmt(pb,4)}</b>`,
       `(c) 少於${p.c}次 = P(X≤${p.c-1}) ≈ <b>${fmt(pc,4)}</b>`,
       `(d) 最多${p.d}次 = P(X≤${p.d}) ≈ <b>${fmt(pd,4)}</b>`,
-      `(e) 介於${p.e}~${p.f}次間 = P(X≤${p.f}) − P(X≤${p.e-1}) = ${fmt(binomCDF(p.n,p.f,p.p),4)} − ${fmt(binomCDF(p.n,p.e-1,p.p),4)} ≈ <b>${fmt(pe,4)}</b>`,
+      p.e===0
+        ? `(e) 介於${p.e}~${p.f}次間 = P(X≤${p.f}) ≈ <b>${fmt(pe,4)}</b>`
+        : `(e) 介於${p.e}~${p.f}次間 = P(X≤${p.f}) − P(X≤${p.e-1}) = ${fmt(binomCDF(p.n,p.f,p.p),4)} − ${fmt(binomCDF(p.n,p.e-1,p.p),4)} ≈ <b>${fmt(pe,4)}</b>`,
     ];
   },
   tip(){
